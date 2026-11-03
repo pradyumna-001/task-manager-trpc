@@ -25,3 +25,20 @@ export function listTasks(): Task[] {
     return a.id.localeCompare(b.id);
   });
 }
+
+type UpdateTaskInput = {
+  title?: string;
+  description?: string;
+};
+
+export function updateTask(id: string, updates: UpdateTaskInput): Task {
+  const task = tasks.find(t => t.id === id);
+  if (!task) {
+    throw new Error(`Task with id ${id} not found`);
+  }
+
+  const updatedTask: Task = { ...task, ...updates };
+  const index = tasks.findIndex(t => t.id === id);
+  tasks[index] = updatedTask;
+  return updatedTask;
+}
