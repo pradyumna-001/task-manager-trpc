@@ -1,4 +1,4 @@
-import { addTask, tasks } from './lib/tasks';
+import { addTask, tasks } from './tasks';
 
 // Test 1: add a task with title only
 const t1 = addTask('Buy milk');
