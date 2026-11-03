@@ -119,7 +119,26 @@ async function main() {
   const finalList = await caller.taskList({});
   console.assert(finalList.length === 4, `taskList should return 4 items, got ${finalList.length}`);
 
-  console.log('All tests passed.');
+  // --- taskList pagination tests ---
+
+  // Test: take limits number of tasks returned
+  const firstTwo = await caller.taskList({ take: 2 });
+  console.assert(firstTwo.length === 2, `take=2 should return 2 items, got ${firstTwo.length}`);
+
+  // Test: skip skips first N tasks
+  const skipTwo = await caller.taskList({ skip: 2 });
+  console.assert(skipTwo.length === 2, `skip=2 should return 2 items, got ${skipTwo.length}`);
+  console.assert(skipTwo[0].title !== firstTwo[0].title, 'skip=2 should return different tasks than take=2');
+
+  // Test: take:1 returns exactly one task
+  const oneTask = await caller.taskList({ take: 1 });
+  console.assert(oneTask.length === 1, `take=1 should return 1 item, got ${oneTask.length}`);
+
+  // Test: skip beyond list length returns empty
+  const emptyResult = await caller.taskList({ skip: 100 });
+  console.assert(emptyResult.length === 0, `skip=100 should return 0 items, got ${emptyResult.length}`);
+
+  console.log('All pagination tests passed.');
 }
 
 main().catch(console.error);
