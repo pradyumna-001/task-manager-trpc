@@ -1,14 +1,30 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { trpc } from '@/app/_trpc/client';
 
 export default function TaskRow({ task }: { task: { id: string; title: string; description?: string; createdAt: Date } }) {
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
   const del = trpc.taskDelete.useMutation({
     onSuccess: () => {
-      window.location.reload();
+      setMessage({ type: 'success', text: 'Task deleted successfully!' });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    },
+    onError: (error) => {
+      setMessage({ type: 'error', text: error.message || 'Failed to delete task' });
     },
   });
+
+  const handleDelete = () => {
+    if (window.confirm('Are you sure you want to delete this task?')) {
+      setMessage(null);
+      del.mutate({ id: task.id });
+    }
+  };
 
   return (
     <li>
@@ -28,8 +44,25 @@ export default function TaskRow({ task }: { task: { id: string; title: string; d
         >
           Edit
         </Link>
-        <button onClick={() => del.mutate({ id: task.id })}>Delete</button>
+        <button onClick={handleDelete} disabled={del.isPending}>
+          {del.isPending ? 'Deleting...' : 'Delete'}
+        </button>
       </p>
+      {message && (
+        <div
+          style={{
+            padding: '8px',
+            marginTop: '8px',
+            borderRadius: '4px',
+            backgroundColor: message.type === 'success' ? '#d4edda' : '#f8d7da',
+            color: message.type === 'success' ? '#155724' : '#721c24',
+            border: `1px solid ${message.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+            fontSize: '14px',
+          }}
+        >
+          {message.text}
+        </div>
+      )}
     </li>
   );
 }
