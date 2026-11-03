@@ -118,3 +118,14 @@
 - **Consistent experience:** Both create and edit forms enforce the same validation rule (title required).
 
 **Trade-off:** Validation logic exists in both client and server (Zod), which is intentional for defense in depth.
+
+## UpdateTask Creates Missing Task (Upsert)
+
+**Decision:** `taskUpdate` creates a new task if the provided ID does not exist in the store, rather than throwing an error.
+
+**Reasoning:**
+- **Resilience:** The in-memory store resets on every dev server restart. Without upsert, editing a task whose ID was lost on restart would fail with a task not found error.
+- **Better UX:** Editing a task that no longer exists creates it fresh instead of showing an error, keeping the flow functional.
+- **Simplicity:** Avoids requiring clients to handle 404 errors for update operations they expect to succeed.
+
+**Trade-off:** Creates a task silently if the ID is wrong (e.g., typo in URL), which could result in duplicate tasks with different IDs. This is acceptable for a small in-memory store where exact ID matching is not critical.
