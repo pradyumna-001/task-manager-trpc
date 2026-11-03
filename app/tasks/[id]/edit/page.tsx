@@ -10,6 +10,7 @@ export default function EditTaskPage({ params }: { params: { id: Promise<string>
   const task = data?.find((t) => t.id === id);
   const [title, setTitle] = useState(task?.title ?? '');
   const [description, setDescription] = useState(task?.description ?? '');
+  const [titleError, setTitleError] = useState<string | null>(null);
   const update = trpc.taskUpdate.useMutation({
     onSuccess: () => {
       window.location.href = '/tasks';
@@ -18,6 +19,11 @@ export default function EditTaskPage({ params }: { params: { id: Promise<string>
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!title.trim()) {
+      setTitleError('Title is required');
+      return;
+    }
+    setTitleError(null);
     update.mutate({ id, title, description });
   };
 
@@ -38,9 +44,13 @@ export default function EditTaskPage({ params }: { params: { id: Promise<string>
           <input
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (titleError) setTitleError(null);
+            }}
             required
           />
+          {titleError && <span style={{ color: 'red' }}>{titleError}</span>}
         </label>
         <label>
           Description

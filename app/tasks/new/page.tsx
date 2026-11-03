@@ -7,6 +7,7 @@ import Link from 'next/link';
 export default function CreateTaskPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [titleError, setTitleError] = useState<string | null>(null);
   const create = trpc.taskCreate.useMutation({
     onSuccess: () => {
       window.location.href = '/tasks';
@@ -15,6 +16,11 @@ export default function CreateTaskPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!title.trim()) {
+      setTitleError('Title is required');
+      return;
+    }
+    setTitleError(null);
     create.mutate({ title, description });
   };
 
@@ -27,9 +33,13 @@ export default function CreateTaskPage() {
           <input
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (titleError) setTitleError(null);
+            }}
             required
           />
+          {titleError && <span style={{ color: 'red' }}>{titleError}</span>}
         </label>
         <label>
           Description
