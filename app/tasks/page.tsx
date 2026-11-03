@@ -2,6 +2,8 @@ import React from 'react';
 import { appRouter } from '@/server/trpc/router';
 import TaskRow from './TaskRow';
 
+export const revalidate = 0;
+
 export default async function TaskListPage() {
   const caller = appRouter.createCaller({});
   const tasks = await caller.taskList();
