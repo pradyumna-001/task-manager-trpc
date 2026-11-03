@@ -9,7 +9,7 @@ export default function CreateTaskPage() {
   const [description, setDescription] = useState('');
   const create = trpc.taskCreate.useMutation({
     onSuccess: () => {
-      window.location.href = '/tasks';
+      window.location.href = '/';
     },
   });
 
@@ -43,7 +43,7 @@ export default function CreateTaskPage() {
         </button>
       </form>
       <p>
-        <Link href="/tasks">Back to task list</Link>
+        <Link href="/">Back to task list</Link>
       </p>
     </main>
   );
