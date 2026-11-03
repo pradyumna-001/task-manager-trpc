@@ -1,10 +1,13 @@
-import { createNextApiHandler } from '@trpc/server/adapters/next';
+import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import { appRouter } from '@/server/trpc/router';
 
-const handler = createNextApiHandler({
-  router: appRouter,
-  createContext: async () => ({}),
-});
+const handler = (req: Request) =>
+  fetchRequestHandler({
+    endpoint: '/api/trpc',
+    router: appRouter,
+    createContext: () => ({}),
+    req,
+  });
 
 export const GET = handler;
 export const POST = handler;
