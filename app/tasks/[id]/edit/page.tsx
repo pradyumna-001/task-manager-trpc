@@ -8,17 +8,16 @@ import { useParams } from 'next/navigation';
 export default function EditTaskPage() {
   const { id } = useParams();
   const taskId = typeof id === 'string' ? id : Array.isArray(id) ? id[0] : undefined;
-  console.log('[EditTaskPage] useParams.id:', taskId);
 
-  const { data: task, isLoading } = trpc.taskGetById.useQuery({ id: taskId ?? '' });
-  console.log('[EditTaskPage] task:', task);
+  const { data: task, isLoading } = trpc.taskGetById.useQuery({ id: taskId ?? '' }, {
+    enabled: !!taskId,
+  });
 
-  const [title, setTitle] = useState(task?.title ?? '');
-  const [description, setDescription] = useState(task?.description ?? '');
+  const [titleValue, setTitle] = useState(task?.title ?? '');
+  const [descriptionValue, setDescription] = useState(task?.description ?? '');
   const [titleError, setTitleError] = useState<string | null>(null);
   const update = trpc.taskUpdate.useMutation({
     onSuccess: () => {
-      console.log('[EditTaskPage] update succeeded, redirecting to /');
       window.location.href = '/';
     },
     onError: (error) => {
@@ -26,7 +25,6 @@ export default function EditTaskPage() {
     },
   });
 
-  // Sync form fields when task data loads
   useEffect(() => {
     setTitle(task?.title ?? '');
     setDescription(task?.description ?? '');
@@ -34,23 +32,32 @@ export default function EditTaskPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('[EditTaskPage] submit called with:', { id: taskId, title, description });
     if (!taskId) {
       setTitleError('Invalid task ID');
       return;
     }
-    if (!title.trim()) {
+    if (!titleValue.trim()) {
       setTitleError('Title is required');
       return;
     }
     setTitleError(null);
-    update.mutate({ id: taskId, title, description });
+    update.mutate({ id: taskId, title: titleValue, description: descriptionValue });
   };
 
-  if (isLoading || !task) {
+  if (isLoading || !taskId) {
     return (
       <main>
         <h1>Loading...</h1>
+      </main>
+    );
+  }
+
+  if (!task) {
+    return (
+      <main>
+        <h1>Task not found</h1>
+        <p>Task with id {id} not found.</p>
+        <p><Link href="/">Back to task list</Link></p>
       </main>
     );
   }
@@ -63,7 +70,7 @@ export default function EditTaskPage() {
           Title
           <input
             type="text"
-            value={title}
+            value={titleValue}
             onChange={(e) => {
               setTitle(e.target.value);
               if (titleError) setTitleError(null);
@@ -75,7 +82,7 @@ export default function EditTaskPage() {
         <label>
           Description
           <textarea
-            value={description}
+            value={descriptionValue}
             onChange={(e) => setDescription(e.target.value)}
           />
         </label>
