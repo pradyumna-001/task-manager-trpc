@@ -16,6 +16,7 @@ graph TD
         direction TB
         route[app/api/trpc/[trpc]/route.ts<br/>fetchRequestHandler]
         router[server/trpc/router.ts<br/>t.initTRPC().router]
+        procedures[Procedures<br/>taskList • taskCreate<br/>taskUpdate • taskDelete]
         store[lib/tasks.ts<br/>In-memory Task[] store<br/>addTask/list/update/delete]
         types[types/task.ts<br/>Task interface<br/>shared by client & server]
     end
@@ -23,11 +24,11 @@ graph TD
     page -->|uses| trpcClient
     trpcClient -->|HTTP POST JSON| route
     route --> router
-    router --> store
+    router --> procedures
+    procedures --> store
     store -.-> types
     router -.-> types
 ```
-
 
 ## Data Flow
 
@@ -52,6 +53,16 @@ flowchart LR
 6. Result is serialized back to the client as JSON
 7. React Query caches the result and re-renders the UI
 
+### tRPC Procedures
+
+| Procedure | Type | Input | Output | Description |
+|-----------|------|-------|--------|-------------|
+| `hello` | Query | None | `string` | Health check, returns `"hello"` |
+| `taskList` | Query | None | `Task[]` | Returns all tasks sorted newest first |
+| `taskCreate` | Mutation | `{ title: string, description?: string }` | `Task` | Creates a new task; title is required |
+| `taskUpdate` | Mutation | `{ id: string, title?: string, description?: string }` | `Task` | Updates existing task; `id` and `createdAt` are immutable |
+| `taskDelete` | Mutation | `{ id: string }` | `boolean` | Removes a task; returns `true` on success |
+
 ### Server Component Boundary
 
 - `app/layout.tsx` wraps all pages with `TrpcProvider` (a Client Component)
@@ -75,3 +86,4 @@ flowchart LR
 - **Single source of truth for types:** `types/task.ts` is imported by both `lib/tasks.ts` and `server/trpc/router.ts`. The client infers procedure types from `AppRouter` exported by the router.
 - **No direct store access from client:** The browser cannot read or write `lib/tasks.ts`. All data mutations go through tRPC procedures.
 - **Stateless route handler:** `createContext` returns an empty object `{}`; the in-memory store is module-level state in `lib/tasks.ts`, not request-scoped.
+- **Partial updates:** `taskUpdate` accepts only the fields to change (`title` and/or `description`); `id` and `createdAt` are never modified.

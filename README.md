@@ -30,12 +30,13 @@ task-manager-trpc/
 ├── server/
 │   └── trpc/
 │       ├── context.ts          # tRPC context factory (per-request context)
-│       └── router.ts           # tRPC app router (hello procedure placeholder)
+│       └── router.ts           # tRPC app router (taskList, taskCreate, taskUpdate, taskDelete procedures)
 ├── types/
 │   └── task.ts                 # Task interface shared by store and tRPC
 ├── docs/
 │   ├── ARCHITECTURE.md         # Data flow and component boundaries
-│   └── DECISIONS.md            # Reasoning behind key technical decisions
+│   ├── DECISIONS.md            # Reasoning behind key technical decisions
+│   └── API.md                  # tRPC procedure reference
 ├── package.json
 ├── next.config.ts
 ├── tsconfig.json
@@ -64,13 +65,13 @@ npx tsc --noEmit
 
 - Next.js v15 App Router with root page at `/`
 - tRPC client-server wiring with React Query provider
-- `hello` query procedure exposed at `/api/trpc`
-- Home page calls `hello` and displays the returned string
+- tRPC procedures: `hello`, `taskList`, `taskCreate`, `taskUpdate`, `taskDelete`
 - In-memory task store with `addTask`, `listTasks`, `updateTask`, `deleteTask`
+- See `docs/API.md` for the complete procedure reference
 
 ## Design Decisions
 
-See `docs/DECISIONS.md` for the reasoning behind tRPC, SSR, in-memory store, and App Router choices.
+See `docs/DECISIONS.md` for the reasoning behind tRPC, SSR, in-memory store, App Router, Zod validation, error handling, and partial updates.
 
 ## Security
 

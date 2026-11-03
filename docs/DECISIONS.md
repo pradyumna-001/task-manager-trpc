@@ -73,3 +73,37 @@
 - **Testability:** Store functions can be tested in isolation without the tRPC layer or Next.js.
 
 **Trade-off:** More files than a single-file prototype, but each file has a single, clear responsibility.
+
+## Partial Updates via Spread Merge
+
+**Decision:** `taskUpdate` accepts only `title` and/or `description` as optional fields; `id` and `createdAt` are never modified by the update procedure.
+
+**Reasoning:**
+- **Immutable identity:** The task `id` is set at creation and never changes; allowing clients to modify it would break references and cache keys.
+- **Immutable creation time:** `createdAt` records when the task was first created and should not change on edits.
+- **Flexible edits:** Clients can update just the title, just the description, or both, without needing to send the full task object.
+- **Store-level enforcement:** The `updateTask` function in `lib/tasks.ts` uses spread merge (`{ ...task, ...updates }`), so only provided fields override existing values.
+
+**Trade-off:** Clients cannot change a task's ID or creation timestamp after creation. If a task needs a different ID, it must be deleted and recreated.
+
+## Mutation vs Query in tRPC
+
+**Decision:** Use `query` procedures for reads (`taskList`) and `mutation` procedures for writes (`taskCreate`, `taskUpdate`, `taskDelete`).
+
+**Reasoning:**
+- **Semantic correctness:** Queries are read-only and side-effect-free; mutations modify state. This distinction matches REST's GET vs POST/PUT/DELETE.
+- **React Query integration:** TanStack React Query caches query results and refetches on mutation, providing automatic cache invalidation for the task list after creates, updates, or deletes.
+- **Client expectations:** Queries can be called safely multiple times; mutations represent actions with side effects and should not be cached or retried blindly.
+
+**Trade-off:** Mutations require explicit cache management (React Query handles this automatically via `onSuccess` callbacks or `invalidateQueries`).
+
+## Validation Boundary (Defense in Depth)
+
+**Decision:** Validate input at both the tRPC API boundary (Zod) and inside the store functions (`addTask`, `updateTask`).
+
+**Reasoning:**
+- **API boundary:** Zod schemas reject malformed requests before they reach the handler, returning clear 400 errors to the client.
+- **Store protection:** Store functions validate their own invariants (e.g., `addTask` rejects empty titles), so invalid data can never enter the store even if called directly or bypassing tRPC.
+- **Defense in depth:** Two layers of validation mean a bug in one layer doesn't silently corrupt data.
+
+**Trade-off:** Some validation logic is duplicated (e.g., title required is checked by both Zod and `addTask`). This is intentional and acceptable for a small application.
