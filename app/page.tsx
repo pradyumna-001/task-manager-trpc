@@ -22,7 +22,7 @@ const trpcWithHooks = trpc as typeof trpc & {
     }
   ) => {
     data: { pages: TData[] } | undefined;
-    fetchNextPage: () => void;
+    fetchNextPage: () => Promise<unknown>;
     hasNextPage: boolean;
     isFetchingNextPage: boolean;
     isLoading: boolean;
@@ -53,14 +53,18 @@ export default function HomePage() {
   const tasks = data?.pages.flatMap((page: Task[]) => page) ?? [];
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const isFetchingRef = useRef(false);
 
   useEffect(() => {
     if (!hasNextPage) return;
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
-          fetchNextPage();
+        if (entries[0].isIntersecting && !isFetchingRef.current) {
+          isFetchingRef.current = true;
+          fetchNextPage().finally(() => {
+            isFetchingRef.current = false;
+          });
         }
       },
       { rootMargin: '100px' }
