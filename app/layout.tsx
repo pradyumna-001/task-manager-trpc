@@ -1,7 +1,10 @@
+import type { AppRouter } from '@/server/trpc/router';
+import { TrpcProvider } from '@/app/_trpc/provider';
+
 export const metadata = {
   title: 'Task Manager',
   description: 'Simple task manager built with Next.js and tRPC',
-}
+};
 
 export default function RootLayout({
   children,
@@ -10,7 +13,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <TrpcProvider>{children}</TrpcProvider>
+      </body>
     </html>
-  )
+  );
 }
