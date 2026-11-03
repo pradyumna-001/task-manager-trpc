@@ -18,7 +18,7 @@ export default function HomePage() {
 
   const loadTasks = async (skip: number) => {
     setIsLoading(true);
-    const newTasks = await trpc.taskList({ skip, take: 10 });
+    const newTasks = await (trpc.taskList as any)({ skip, take: 10 });
     setTasks((prev) => [...prev, ...newTasks]);
     setSkip(skip + newTasks.length);
     setIsLoading(false);
@@ -29,7 +29,7 @@ export default function HomePage() {
     setTasks([]);
     setSkip(0);
     setHasMore(true);
-    trpc.taskList({ skip: 0, take: 10 }).then((initialTasks) => {
+    (trpc.taskList as any)({ skip: 0, take: 10 }).then((initialTasks: { id: string; title: string; description?: string; createdAt: Date }[]) => {
       setTasks(initialTasks);
       setSkip(initialTasks.length);
       setHasMore(initialTasks.length === 10);
@@ -42,7 +42,7 @@ export default function HomePage() {
       const { scrollTop, clientHeight, scrollHeight } = document.documentElement;
       if (scrollTop + clientHeight >= scrollHeight - 100) {
         setIsLoading(true);
-        trpc.taskList({ skip, take: 10 }).then((newTasks) => {
+        (trpc.taskList as any)({ skip, take: 10 }).then((newTasks: { id: string; title: string; description?: string; createdAt: Date }[]) => {
           setTasks((prev) => [...prev, ...newTasks]);
           setSkip(skip + newTasks.length);
           setIsLoading(false);
