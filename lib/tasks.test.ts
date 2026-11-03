@@ -1,4 +1,4 @@
-import { addTask, listTasks, tasks } from './tasks';
+import { addTask, listTasks, tasks, updateTask } from './tasks';
 
 async function main() {
   // Test 1: add a task with title only
@@ -53,6 +53,45 @@ async function main() {
   tasks.length = 0;
   console.assert(listTasks().length === 0, 'empty store should return empty array');
   tasks.push(...original);
+
+  // Test 8: updateTask updates title only
+  await new Promise(resolve => setTimeout(resolve, 5));
+  const updated = updateTask(t1.id, { title: 'Buy bread' });
+  console.assert(updated.title === 'Buy bread', 'title should be updated');
+  console.assert(updated.description === undefined, 'description should remain undefined');
+  console.assert(updated.id === t1.id, 'id should not change');
+  console.assert(updated.createdAt.getTime() === t1.createdAt.getTime(), 'createdAt should not change');
+  console.assert(tasks.find(t => t.id === t1.id)?.title === 'Buy bread', 'store should reflect update');
+
+  // Test 9: updateTask updates description only
+  await new Promise(resolve => setTimeout(resolve, 5));
+  const updated2 = updateTask(t2.id, { description: 'Updated description' });
+  console.assert(updated2.description === 'Updated description', 'description should be updated');
+  console.assert(updated2.title === 'Write report', 'title should remain unchanged');
+  console.assert(updated2.id === t2.id, 'id should not change');
+
+  // Test 10: updateTask updates both title and description
+  const updated3 = updateTask(t3.id, { title: 'Third task updated', description: 'New description' });
+  console.assert(updated3.title === 'Third task updated', 'title should be updated');
+  console.assert(updated3.description === 'New description', 'description should be updated');
+
+  // Test 11: updateTask throws for nonexistent id
+  try {
+    updateTask('nonexistent-id', { title: 'Should not work' });
+    console.assert(false, 'should have thrown for nonexistent id');
+  } catch (e) {
+    console.log('Nonexistent id throws:', (e as Error).message);
+  }
+
+  // Test 12: updateTask does not modify other tasks
+  const otherTasks = tasks.filter(t => t.id !== t1.id && t.id !== t2.id && t.id !== t3.id);
+  const otherIdsBefore = otherTasks.map(t => t.id);
+  updateTask(t1.id, { title: 'Changed' });
+  const otherIdsAfter = tasks.filter(t => t.id !== t1.id && t.id !== t2.id && t.id !== t3.id).map(t => t.id);
+  console.assert(
+    JSON.stringify(otherIdsBefore) === JSON.stringify(otherIdsAfter),
+    'other tasks should not be affected'
+  );
 
   console.log('All tests passed.');
 }
