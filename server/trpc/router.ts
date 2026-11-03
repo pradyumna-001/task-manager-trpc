@@ -1,7 +1,7 @@
 import { initTRPC } from '@trpc/server';
 import type { Context } from './context';
 import { z } from 'zod';
-import { listTasks, addTask, updateTask } from '../../lib/tasks';
+import { listTasks, addTask, updateTask, deleteTask } from '../../lib/tasks';
 
 const t = initTRPC.context<Context>().create();
 
@@ -28,6 +28,9 @@ export const appRouter = t.router({
       const { id, ...updates } = input;
       return updateTask(id, updates);
     }),
+  taskDelete: t.procedure
+    .input(z.object({ id: z.string() }))
+    .mutation(({ input }) => deleteTask(input.id)),
 });
 
 export type AppRouter = typeof appRouter;
