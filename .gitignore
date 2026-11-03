@@ -27,5 +27,5 @@ Thumbs.db
 # Logs
 *.log
 
-# Documentation (ignored per request)
-docs/
+# Reference materials (not part of the application)
+reference/
