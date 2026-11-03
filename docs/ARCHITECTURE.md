@@ -4,44 +4,45 @@
 
 The task manager is a single-page Next.js v15 application with a typed RPC (tRPC) backend. The frontend and backend share TypeScript types, so the client knows the server's procedure signatures at compile time.
 
+```mermaid
+graph TD
+    subgraph Browser["Browser (Client)"]
+        direction TB
+        page[page.tsx<br/>Client Component]
+        trpcClient[tRPC Client<br/>createTRPCReact + QueryClient]
+    end
+
+    subgraph Server["Next.js App Router (Server)"]
+        direction TB
+        route[app/api/trpc/[trpc]/route.ts<br/>fetchRequestHandler]
+        router[server/trpc/router.ts<br/>t.initTRPC().router]
+        store[lib/tasks.ts<br/>In-memory Task[] store<br/>addTask/list/update/delete]
+        types[types/task.ts<br/>Task interface<br/>shared by client & server]
+    end
+
+    page -->|uses| trpcClient
+    trpcClient -->|HTTP POST JSON| route
+    route --> router
+    router --> store
+    store -.-> types
+    router -.-> types
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      Browser (Client)                       │
-│  ┌─────────────┐      ┌─────────────────────────────────┐  │
-│  │  page.tsx   │─────▶│   tRPC Client (React Query)     │  │
-│  │  (Client)   │      │   createTRPCReact + QueryClient │  │
-│  └─────────────┘      └──────────────┬──────────────────┘  │
-└─────────────────────────────────────┼───────────────────────┘
-                                      │ HTTP POST (JSON)
-                                      ▼
-┌─────────────────────────────────────────────────────────────┐
-│                  Next.js App Router (Server)                │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │  app/api/trpc/[trpc]/route.ts                       │   │
-│  │  fetchRequestHandler (@trpc/server/adapters/fetch)  │   │
-│  └──────────────────────────┬─────────────────────────┘   │
-│                             │                               │
-│  ┌──────────────────────────▼─────────────────────────┐   │
-│  │  server/trpc/router.ts                              │   │
-│  │  t.initTRPC().router({ hello, ... })                │   │
-│  └──────────────────────────┬─────────────────────────┘   │
-│                             │                               │
-│  ┌──────────────────────────▼─────────────────────────┐   │
-│  │  lib/tasks.ts                                       │   │
-│  │  In-memory Task[] store                             │   │
-│  │  addTask / listTasks / updateTask / deleteTask      │   │
-│  └──────────────────────────┬─────────────────────────┘   │
-│                             │                               │
-│  ┌──────────────────────────▼─────────────────────────┐   │
-│  │  types/task.ts                                      │   │
-│  │  Task interface (shared by client & server)         │   │
-│  └─────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-```
+
 
 ## Data Flow
 
 ### Client → Server (tRPC Query/Mutation)
+
+```mermaid
+flowchart LR
+    A[Client calls<br/>tRPC procedure] --> B[httpBatchLink<br/>serializes JSON]
+    B --> C[POST to /api/trpc]
+    C --> D[fetchRequestHandler<br/>Next.js route handler]
+    D --> E[tRPC router<br/>matches procedure]
+    E --> F[lib/tasks.ts<br/>CRUD operation]
+    F --> G[Result serialized<br/>as JSON]
+    G --> H[React Query<br/>caches & re-renders]
+```
 
 1. Client calls a tRPC procedure (e.g., `trpc.taskList.query()`)
 2. `httpBatchLink` serializes the call as JSON and POSTs to `/api/trpc`
