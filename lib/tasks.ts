@@ -42,3 +42,13 @@ export function updateTask(id: string, updates: UpdateTaskInput): Task {
   tasks[index] = updatedTask;
   return updatedTask;
 }
+
+export function deleteTask(id: string): boolean {
+  const index = tasks.findIndex(t => t.id === id);
+  if (index === -1) {
+    throw new Error(`Task with id ${id} not found`);
+  }
+
+  tasks.splice(index, 1);
+  return true;
+}
