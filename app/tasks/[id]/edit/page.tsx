@@ -1,20 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { trpc } from '@/app/_trpc/client';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 export default function EditTaskPage() {
-  const { id } = useParams();
-  const taskId = typeof id === 'string' ? id : Array.isArray(id) ? id[0] : undefined;
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id') ?? '';
+  const titleParam = searchParams.get('title') ?? '';
+  const descriptionParam = searchParams.get('description') ?? '';
 
-  const { data: task, isLoading } = trpc.taskGetById.useQuery({ id: taskId ?? '' }, {
-    enabled: !!taskId,
-  });
-
-  const [titleValue, setTitle] = useState(task?.title ?? '');
-  const [descriptionValue, setDescription] = useState(task?.description ?? '');
+  const [titleValue, setTitle] = useState(titleParam);
+  const [descriptionValue, setDescription] = useState(descriptionParam);
   const [titleError, setTitleError] = useState<string | null>(null);
   const update = trpc.taskUpdate.useMutation({
     onSuccess: () => {
@@ -25,14 +23,9 @@ export default function EditTaskPage() {
     },
   });
 
-  useEffect(() => {
-    setTitle(task?.title ?? '');
-    setDescription(task?.description ?? '');
-  }, [task]);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!taskId) {
+    if (!id) {
       setTitleError('Invalid task ID');
       return;
     }
@@ -44,15 +37,7 @@ export default function EditTaskPage() {
     update.mutate({ id, title: titleValue, description: descriptionValue });
   };
 
-  if (isLoading || !taskId) {
-    return (
-      <main>
-        <h1>Loading...</h1>
-      </main>
-    );
-  }
-
-  if (!task) {
+  if (!id) {
     return (
       <main>
         <h1>Task not found</h1>
