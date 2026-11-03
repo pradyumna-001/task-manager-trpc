@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { trpc } from '@/app/_trpc/client';
 
 export default function TaskRow({ task }: { task: { id: string; title: string; description?: string; createdAt: Date } }) {
@@ -14,7 +15,10 @@ export default function TaskRow({ task }: { task: { id: string; title: string; d
       <h2>{task.title}</h2>
       {task.description && <p>{task.description}</p>}
       <time>{task.createdAt.toLocaleDateString()}</time>
-      <button onClick={() => del.mutate({ id: task.id })}>Delete</button>
+      <p>
+        <Link href={`/tasks/${task.id}/edit`}>Edit</Link>
+        <button onClick={() => del.mutate({ id: task.id })}>Delete</button>
+      </p>
     </li>
   );
 }
