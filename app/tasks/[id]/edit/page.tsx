@@ -41,7 +41,7 @@ export default function EditTaskPage() {
       return;
     }
     setTitleError(null);
-    update.mutate({ id: taskId, title: titleValue, description: descriptionValue });
+    update.mutate({ id, title: titleValue, description: descriptionValue });
   };
 
   if (isLoading || !taskId) {
