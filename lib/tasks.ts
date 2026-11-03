@@ -17,3 +17,11 @@ export function addTask(title: string, description?: string): Task {
   tasks.push(task);
   return task;
 }
+
+export function listTasks(): Task[] {
+  return [...tasks].sort((a, b) => {
+    const timeDiff = b.createdAt.getTime() - a.createdAt.getTime();
+    if (timeDiff !== 0) return timeDiff;
+    return a.id.localeCompare(b.id);
+  });
+}
