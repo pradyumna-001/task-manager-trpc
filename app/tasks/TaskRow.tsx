@@ -14,7 +14,7 @@ export default function TaskRow({ task }: { task: { id: string; title: string; d
     <li>
       <h2>{task.title}</h2>
       {task.description && <p>{task.description}</p>}
-      <time>{task.createdAt.toLocaleDateString()}</time>
+      <time suppressHydrationWarning>{task.createdAt.toLocaleDateString()}</time>
       <p>
         <Link href={`/tasks/${task.id}/edit`}>Edit</Link>
         <button onClick={() => del.mutate({ id: task.id })}>Delete</button>
