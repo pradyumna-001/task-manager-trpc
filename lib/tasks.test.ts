@@ -1,4 +1,4 @@
-import { addTask, listTasks, tasks, updateTask } from './tasks';
+import { addTask, listTasks, tasks, updateTask, deleteTask } from './tasks';
 
 async function main() {
   // Test 1: add a task with title only
@@ -91,6 +91,30 @@ async function main() {
   console.assert(
     JSON.stringify(otherIdsBefore) === JSON.stringify(otherIdsAfter),
     'other tasks should not be affected'
+  );
+
+  // Test 13: deleteTask removes a task from the store
+  const deleted = deleteTask(t3.id);
+  console.assert(deleted === true, 'deleteTask should return true');
+  console.assert(tasks.length === 2, `tasks should have 2 items after delete, got ${tasks.length}`);
+  console.assert(tasks.find(t => t.id === t3.id) === undefined, 'deleted task should not be in store');
+
+  // Test 14: deleteTask throws for nonexistent id
+  try {
+    deleteTask('nonexistent-id');
+    console.assert(false, 'should have thrown for nonexistent id');
+  } catch (e) {
+    console.log('Nonexistent id throws:', (e as Error).message);
+  }
+
+  // Test 15: deleteTask does not affect other tasks
+  const beforeIds = tasks.map(t => t.id);
+  deleteTask(t1.id);
+  const afterIds = tasks.map(t => t.id);
+  const expectedAfter = beforeIds.filter(id => id !== t1.id);
+  console.assert(
+    JSON.stringify(afterIds) === JSON.stringify(expectedAfter),
+    'only the deleted task should be removed'
   );
 
   console.log('All tests passed.');
