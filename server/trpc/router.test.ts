@@ -4,13 +4,15 @@ import { addTask } from '../../lib/tasks';
 async function main() {
   const caller = appRouter.createCaller({});
 
-  // Seed tasks to test against
+  // Seed tasks
   await new Promise(resolve => setTimeout(resolve, 5));
   addTask('First task');
   await new Promise(resolve => setTimeout(resolve, 5));
   addTask('Second task');
   await new Promise(resolve => setTimeout(resolve, 5));
   addTask('Third task');
+
+  // --- taskList tests ---
 
   // Test 1: taskList returns all tasks from store
   const result = await caller.taskList();
@@ -27,7 +29,41 @@ async function main() {
   console.assert(result[0].title === 'Third task', 'newest task should be first');
   console.assert(result[2].title === 'First task', 'oldest task should be last');
 
-  console.log('All taskList tests passed.');
+  // --- taskCreate tests ---
+
+  // Test: create task with title only
+  await new Promise(resolve => setTimeout(resolve, 5));
+  const created = await caller.taskCreate({ title: 'New task' });
+  console.assert(created.title === 'New task', 'created task should have correct title');
+  console.assert(created.description === undefined, 'description should be undefined when not provided');
+  console.assert(typeof created.id === 'string' && created.id.length > 0, 'task should have a unique id');
+  console.assert(created.createdAt instanceof Date, 'createdAt should be a Date');
+
+  // Test: create task with title and description
+  await new Promise(resolve => setTimeout(resolve, 5));
+  const createdWithDesc = await caller.taskCreate({
+    title: 'Task with description',
+    description: 'Some details here',
+  });
+  console.assert(createdWithDesc.title === 'Task with description', 'title should match');
+  console.assert(
+    createdWithDesc.description === 'Some details here',
+    'description should match'
+  );
+
+  // Test: empty title should be rejected by Zod
+  try {
+    await caller.taskCreate({ title: '' });
+    console.assert(false, 'should have thrown for empty title');
+  } catch (e) {
+    console.log('Empty title rejected by Zod:', (e as Error).message);
+  }
+
+  // Test: taskList now includes the newly created tasks
+  const updated = await caller.taskList();
+  console.assert(updated.length === 5, `taskList should return 5 items, got ${updated.length}`);
+
+  console.log('All taskCreate and taskList tests passed.');
 }
 
 main().catch(console.error);
