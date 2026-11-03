@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, use } from 'react';
 import { trpc } from '@/app/_trpc/client';
 import Link from 'next/link';
 
-export default function EditTaskPage({ params }: { params: { id: string } }) {
+export default function EditTaskPage({ params }: { params: { id: Promise<string> } }) {
+  const id = use(params.id);
   const { data } = trpc.taskList.useQuery();
-  const task = data?.find((t) => t.id === params.id);
+  const task = data?.find((t) => t.id === id);
   const [title, setTitle] = useState(task?.title ?? '');
   const [description, setDescription] = useState(task?.description ?? '');
   const update = trpc.taskUpdate.useMutation({
@@ -17,7 +18,7 @@ export default function EditTaskPage({ params }: { params: { id: string } }) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    update.mutate({ id: params.id, title, description });
+    update.mutate({ id, title, description });
   };
 
   if (!task) {
