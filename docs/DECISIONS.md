@@ -129,3 +129,63 @@
 - **Simplicity:** Avoids requiring clients to handle 404 errors for update operations they expect to succeed.
 
 **Trade-off:** Creates a task silently if the ID is wrong (e.g., typo in URL), which could result in duplicate tasks with different IDs. This is acceptable for a small in-memory store where exact ID matching is not critical.
+
+## Infinite Scroll Pagination (M4 #56-58)
+
+**Decision:** Implement infinite scroll on the task list page using TanStack React Query's `useInfiniteQuery` with `IntersectionObserver`.
+
+**Reasoning:**
+- **User experience:** Users see tasks immediately (first 10) and can scroll to load more without pagination controls.
+- **Performance:** Only fetches what's needed. Initial load is fast (10 items), subsequent pages fetched on demand.
+- **React Query integration:** `useInfiniteQuery` provides built-in caching, deduping, `fetchNextPage`, `hasNextPage`, and `isFetchingNextPage` states.
+- **Simpler than offset pagination UI:** No page numbers, previous/next buttons, or page size selectors to maintain.
+
+**Implementation details:**
+- Backend: `taskList` query accepts optional `skip` (default 0) and `take` (default 10, max 100) parameters via Zod schema. `listTasks(skip, take)` uses `.slice(skip, skip + take)` on sorted array.
+- Frontend: `app/page.tsx` converted to Client Component (`'use client'`). Uses `trpc.useInfiniteQuery(['taskList'], { skip: 0, take: 10 }, { getNextPageParam: (lastPage, allPages) => lastPage.length < 10 ? undefined : { skip: allPages.length * 10, take: 10 } })`.
+- Scroll detection: `IntersectionObserver` on a sentinel div at bottom of list with `rootMargin: '100px'`. Calls `fetchNextPage()` when sentinel intersects viewport.
+- Fetch guard: Synchronous boolean ref (`isFetchingRef.current`) set immediately before `fetchNextPage()`, cleared in `finally` block. Prevents concurrent fetches when observer fires multiple times in same tick.
+- End state: `hasNextPage` becomes `false` when page returns fewer than `take` items. Shows "No more tasks" message.
+
+**Trade-offs:**
+- **SSR vs Client Component:** Task list page converted from Server Component to Client Component to support `useInfiniteQuery` and `IntersectionObserver`. Loses initial SSR render; shows "Loading tasks..." briefly.
+- **State in URL:** Scroll position and page not persisted in URL (no deep linking to specific page). Acceptable for a simple task list.
+- **Initial page size:** Fixed at 10 items. Could be made configurable but adds complexity.
+
+## Mutation Feedback: Loading States, Success/Error Toasts, Delete Confirmation (M4 #23-26)
+
+**Decision:** Add consistent feedback for all mutations: loading states, success toasts with auto-redirect/reload, error toasts, and delete confirmation dialog.
+
+**Reasoning:**
+- **Perceived performance:** Loading states (Creating..., Updating..., Deleting...) give immediate feedback that action was registered.
+- **Success confirmation:** Green toast ("Task created/updated/deleted successfully!") confirms completion. Auto-redirect (create/update) or reload (delete) after 1s keeps user in flow.
+- **Error visibility:** Red toast shows error message if mutation fails. User can retry without losing form data.
+- **Destructive action guard:** Delete requires confirmation dialog to prevent accidental data loss.
+
+**Implementation details:**
+- **Create (`app/tasks/new/page.tsx`):** Button disabled during `create.isPending`, shows "Creating...". `onSuccess` sets success toast, redirects to `/` after 1s. `onError` sets error toast with `error.message`.
+- **Update (`app/tasks/[id]/edit/page.tsx`):** Button disabled during `update.isPending`, shows "Updating...". Inputs disabled during mutation. `onSuccess` sets success toast, redirects after 1s. `onError` sets error toast.
+- **Delete (`app/tasks/TaskRow.tsx`):** Button disabled during `del.isPending`, shows "Deleting...". `window.confirm()` before mutate. `onSuccess` sets success toast, reloads page after 1s. `onError` sets error toast.
+- **Toast styling:** Inline styled divs (green for success, red for error) with 1px border, padding, rounded corners. Positioned near form/button.
+
+**Trade-offs:**
+- **Toast position:** Inline near action rather than global notification system. Simpler, no portal/z-index management.
+- **Auto-dismiss timing:** Fixed 1s delay before redirect/reload. Could be configurable but adds complexity.
+- **Error message source:** Uses `error.message` from tRPC error. Assumes server returns user-friendly messages (currently does via Zod validation errors and explicit throws).
+
+## Error Handling: Graceful Error Boundaries (M4 #27)
+
+**Decision:** (Pending) Handle backend errors gracefully without exposing raw stack traces to the client.
+
+**Reasoning:**
+- **Security:** Stack traces can leak internal implementation details, file paths, and dependencies.
+- **UX:** Raw error dumps are not actionable for users; they should see friendly messages.
+- **Debugging:** Errors should be logged server-side for developers, not sent to client.
+
+**Implementation plan:**
+- Wrap tRPC procedures in try/catch or use tRPC error formatting
+- Return structured error codes/messages to client (e.g., `NOT_FOUND`, `VALIDATION_ERROR`, `INTERNAL_ERROR`)
+- Log full stack traces server-side (console.error or logging service)
+- Client displays user-friendly message based on error code
+
+**Trade-off:** Requires mapping internal errors to user-facing codes. Adds complexity but improves security and UX.

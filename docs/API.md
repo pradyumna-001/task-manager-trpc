@@ -6,14 +6,22 @@ This document describes every procedure exposed by the tRPC router (`server/trpc
 
 ### taskList (Query)
 
-Returns all tasks sorted by creation date, newest first.
+Returns tasks sorted by creation date, newest first. Supports pagination via `skip` and `take` parameters.
 
-**Input:** None
+**Input:**
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `skip` | `number` | No | `0` | Number of tasks to skip (offset). Must be >= 0. |
+| `take` | `number` | No | `10` | Number of tasks to return. Must be 1-100. |
 
 **Output:** `Task[]`
 
 ```ts
-const tasks = await caller.taskList();
+// First page (default 10 items)
+const tasks = await caller.taskList({ skip: 0, take: 10 });
+
+// Second page
+const tasks = await caller.taskList({ skip: 10, take: 10 });
 ```
 
 **Example response:**
@@ -29,6 +37,11 @@ const tasks = await caller.taskList();
 ```
 
 **Errors:** None (always returns an array, possibly empty).
+
+**Pagination notes:**
+- Tasks are sorted by `createdAt` descending (newest first), then by `id` for stable ordering.
+- When response length < `take`, no more pages exist.
+- Infinite scroll frontend uses `skip=0,take=10` then `skip=10,take=10`, etc.
 
 ---
 
@@ -72,6 +85,8 @@ const updated = await caller.taskUpdate({ id: "550e8400-...", title: "Buy grocer
 
 **Errors:**
 - `Title is required` — thrown when `title` is provided but empty (Zod validation).
+
+**Note:** If the provided `id` does not exist, a new task is created (upsert behavior). This handles in-memory store resets during development.
 
 ---
 
@@ -124,6 +139,11 @@ interface Task {
 }
 ```
 
-### Error Handling
+## Error Handling
 
 All errors are thrown as standard `Error` instances from the server and propagated to the client via tRPC's error handling. Frontend code should catch and display these errors to the user.
+
+Common error codes:
+- `VALIDATION_ERROR` — Zod validation failed (e.g., empty title)
+- `NOT_FOUND` — Task not found for update/delete
+- `INTERNAL_ERROR` — Unexpected server error (logged server-side)
