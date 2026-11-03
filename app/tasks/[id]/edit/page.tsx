@@ -14,17 +14,23 @@ export default function EditTaskPage() {
   const [titleValue, setTitle] = useState(titleParam);
   const [descriptionValue, setDescription] = useState(descriptionParam);
   const [titleError, setTitleError] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
   const update = trpc.taskUpdate.useMutation({
     onSuccess: () => {
-      window.location.href = '/';
+      setMessage({ type: 'success', text: 'Task updated successfully!' });
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1000);
     },
     onError: (error) => {
-      console.error('[EditTaskPage] update failed:', error);
+      setMessage({ type: 'error', text: error.message || 'Failed to update task' });
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setMessage(null);
     if (!id) {
       setTitleError('Invalid task ID');
       return;
@@ -42,7 +48,9 @@ export default function EditTaskPage() {
       <main>
         <h1>Task not found</h1>
         <p>Task with id {id} not found.</p>
-        <p><Link href="/">Back to task list</Link></p>
+        <p>
+          <Link href="/">Back to task list</Link>
+        </p>
       </main>
     );
   }
@@ -50,6 +58,20 @@ export default function EditTaskPage() {
   return (
     <main>
       <h1>Edit Task</h1>
+      {message && (
+        <div
+          style={{
+            padding: '12px',
+            marginBottom: '16px',
+            borderRadius: '4px',
+            backgroundColor: message.type === 'success' ? '#d4edda' : '#f8d7da',
+            color: message.type === 'success' ? '#155724' : '#721c24',
+            border: `1px solid ${message.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+          }}
+        >
+          {message.text}
+        </div>
+      )}
       <form onSubmit={handleSubmit}>
         <label>
           Title
@@ -61,6 +83,7 @@ export default function EditTaskPage() {
               if (titleError) setTitleError(null);
             }}
             required
+            disabled={update.isPending}
           />
           {titleError && <span style={{ color: 'red' }}>{titleError}</span>}
         </label>
@@ -69,6 +92,7 @@ export default function EditTaskPage() {
           <textarea
             value={descriptionValue}
             onChange={(e) => setDescription(e.target.value)}
+            disabled={update.isPending}
           />
         </label>
         <button type="submit" disabled={update.isPending}>
