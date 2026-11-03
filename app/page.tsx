@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { appRouter } from '@/server/trpc/router';
+import { trpc } from '@/app/_trpc/client';
 import TaskRow from './tasks/TaskRow';
 import Link from 'next/link';
 
 export default function HomePage() {
-  const caller = appRouter.createCaller({});
   const [tasks, setTasks] = useState<{
     id: string;
     title: string;
@@ -19,7 +18,7 @@ export default function HomePage() {
 
   const loadTasks = async (skip: number) => {
     setIsLoading(true);
-    const newTasks = await caller.taskList({ skip, take: 10 });
+    const newTasks = await trpc.taskList.query({ skip, take: 10 });
     setTasks((prev) => [...prev, ...newTasks]);
     setSkip(skip + newTasks.length);
     setIsLoading(false);
@@ -30,7 +29,7 @@ export default function HomePage() {
     setTasks([]);
     setSkip(0);
     setHasMore(true);
-    caller.taskList({ skip: 0, take: 10 }).then((initialTasks) => {
+    trpc.taskList.query({ skip: 0, take: 10 }).then((initialTasks) => {
       setTasks(initialTasks);
       setSkip(initialTasks.length);
       setHasMore(initialTasks.length === 10);
@@ -43,7 +42,7 @@ export default function HomePage() {
       const { scrollTop, clientHeight, scrollHeight } = document.documentElement;
       if (scrollTop + clientHeight >= scrollHeight - 100) {
         setIsLoading(true);
-        caller.taskList({ skip, take: 10 }).then((newTasks) => {
+        trpc.taskList.query({ skip, take: 10 }).then((newTasks) => {
           setTasks((prev) => [...prev, ...newTasks]);
           setSkip(skip + newTasks.length);
           setIsLoading(false);
@@ -53,7 +52,7 @@ export default function HomePage() {
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [tasks.length, skip, isLoading, hasMore, caller]);
+  }, [tasks.length, skip, isLoading, hasMore]);
 
   return (
     <main>
