@@ -7,7 +7,7 @@ export const revalidate = 0;
 
 export default async function HomePage() {
   const caller = appRouter.createCaller({});
-  const tasks = await caller.taskList();
+  const tasks = await caller.taskList({});
 
   return (
     <main>

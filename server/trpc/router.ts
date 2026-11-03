@@ -7,7 +7,14 @@ const t = initTRPC.context<Context>().create();
 
 export const appRouter = t.router({
   hello: t.procedure.query(() => 'hello'),
-  taskList: t.procedure.query(() => listTasks()),
+  taskList: t.procedure
+    .input(
+      z.object({
+        skip: z.number().min(0).default(0),
+        take: z.number().min(1).max(100).default(10),
+      })
+    )
+    .query(({ input }) => listTasks(input.skip, input.take)),
   taskGetById: t.procedure
     .input(z.object({ id: z.string() }))
     .query(({ input }) => getTask(input.id)),

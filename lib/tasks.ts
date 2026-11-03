@@ -18,12 +18,16 @@ export function addTask(title: string, description?: string): Task {
   return task;
 }
 
-export function listTasks(): Task[] {
-  return [...tasks].sort((a, b) => {
-    const timeDiff = b.createdAt.getTime() - a.createdAt.getTime();
-    if (timeDiff !== 0) return timeDiff;
-    return a.id.localeCompare(b.id);
-  });
+export function listTasks(skip?: number, take?: number): Task[] {
+  const skipVal = skip ?? 0;
+  const takeVal = take ?? 10;
+  return [...tasks]
+    .sort((a, b) => {
+      const timeDiff = b.createdAt.getTime() - a.createdAt.getTime();
+      if (timeDiff !== 0) return timeDiff;
+      return a.id.localeCompare(b.id);
+    })
+    .slice(skipVal, skipVal + takeVal);
 }
 
 type UpdateTaskInput = {

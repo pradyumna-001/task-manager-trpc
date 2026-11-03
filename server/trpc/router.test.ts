@@ -15,7 +15,7 @@ async function main() {
   // --- taskList tests ---
 
   // Test 1: taskList returns all tasks from store
-  const result = await caller.taskList();
+  const result = await caller.taskList({});
   console.assert(Array.isArray(result), 'taskList should return an array');
   console.assert(result.length === 3, `taskList should return 3 items, got ${result.length}`);
 
@@ -100,7 +100,7 @@ async function main() {
   await new Promise(resolve => setTimeout(resolve, 5));
   const deleted = await caller.taskDelete({ id: updatedBoth.id });
   console.assert(deleted === true, 'deleteTask should return true');
-  const afterDelete = await caller.taskList();
+  const afterDelete = await caller.taskList({});
   console.assert(afterDelete.length === 4, `taskList should return 4 items after delete, got ${afterDelete.length}`);
   console.assert(
     afterDelete.find(t => t.id === updatedBoth.id) === undefined,
@@ -116,7 +116,7 @@ async function main() {
   }
 
   // --- taskList reflects all changes ---
-  const finalList = await caller.taskList();
+  const finalList = await caller.taskList({});
   console.assert(finalList.length === 4, `taskList should return 4 items, got ${finalList.length}`);
 
   console.log('All tests passed.');
