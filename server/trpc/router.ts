@@ -3,6 +3,8 @@ import type { Context } from './context';
 
 const t = initTRPC.context<Context>().create();
 
-export const appRouter = t.router({});
+export const appRouter = t.router({
+  hello: t.procedure.query(() => 'hello'),
+});
 
 export type AppRouter = typeof appRouter;
