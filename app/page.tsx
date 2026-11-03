@@ -1,13 +1,59 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import { appRouter } from '@/server/trpc/router';
 import TaskRow from './tasks/TaskRow';
 import Link from 'next/link';
 
-export const revalidate = 0;
-
-export default async function HomePage() {
+export default function HomePage() {
   const caller = appRouter.createCaller({});
-  const tasks = await caller.taskList({ skip: 0, take: 10 });
+  const [tasks, setTasks] = useState<{
+    id: string;
+    title: string;
+    description?: string;
+    createdAt: Date;
+  }[]>([]);
+  const [skip, setSkip] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+
+  const loadTasks = async (skip: number) => {
+    setIsLoading(true);
+    const newTasks = await caller.taskList({ skip, take: 10 });
+    setTasks((prev) => [...prev, ...newTasks]);
+    setSkip(skip + newTasks.length);
+    setIsLoading(false);
+    setHasMore(newTasks.length === 10);
+  };
+
+  useEffect(() => {
+    setTasks([]);
+    setSkip(0);
+    setHasMore(true);
+    caller.taskList({ skip: 0, take: 10 }).then((initialTasks) => {
+      setTasks(initialTasks);
+      setSkip(initialTasks.length);
+      setHasMore(initialTasks.length === 10);
+    });
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isLoading || !hasMore) return;
+      const { scrollTop, clientHeight, scrollHeight } = document.documentElement;
+      if (scrollTop + clientHeight >= scrollHeight - 100) {
+        setIsLoading(true);
+        caller.taskList({ skip, take: 10 }).then((newTasks) => {
+          setTasks((prev) => [...prev, ...newTasks]);
+          setSkip(skip + newTasks.length);
+          setIsLoading(false);
+          setHasMore(newTasks.length === 10);
+        });
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [tasks.length, skip, isLoading, hasMore, caller]);
 
   return (
     <main>
@@ -22,6 +68,8 @@ export default async function HomePage() {
           <TaskRow key={task.id} task={task} />
         ))}
       </ul>
+      {isLoading && <p>Loading more tasks...</p>}
+      {!hasMore && tasks.length > 0 && <p>No more tasks</p>}
     </main>
   );
 }
