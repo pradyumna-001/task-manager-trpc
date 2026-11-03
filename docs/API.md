@@ -71,7 +71,6 @@ const updated = await caller.taskUpdate({ id: "550e8400-...", title: "Buy grocer
 ```
 
 **Errors:**
-- `Task with id X not found` — thrown when no task with the given `id` exists.
 - `Title is required` — thrown when `title` is provided but empty (Zod validation).
 
 ---

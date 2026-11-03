@@ -19,9 +19,12 @@ Simple task management application built with **Next.js v15**, **tRPC**, and **R
 task-manager-trpc/
 ├── app/
 │   ├── layout.tsx              # Root layout; wraps pages with TrpcProvider
-│   ├── page.tsx                # Home page; calls hello tRPC procedure (Client Component)
+│   ├── page.tsx                # SSR task list page (Server Component)
 │   ├── api/trpc/[trpc]/        # tRPC route handler (GET/POST)
 │   │   └── route.ts
+│   ├── tasks/
+│   │   ├── new/page.tsx        # Client Component form for creating tasks
+│   │   └── [id]/edit/page.tsx  # Client Component form for editing tasks
 │   └── _trpc/
 │       ├── client.ts           # tRPC React client + httpBatchLink to /api/trpc
 │       └── provider.tsx        # React Query + tRPC Provider wrapper
@@ -53,7 +56,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see the home page.
+Open [http://localhost:3000](http://localhost:3000) to see the task list page.
 
 To verify TypeScript compiles:
 
@@ -63,10 +66,11 @@ npx tsc --noEmit
 
 ## Current State
 
-- Next.js v15 App Router with root page at `/`
+- Next.js v15 App Router with task list page at `/`
 - tRPC client-server wiring with React Query provider
 - tRPC procedures: `hello`, `taskList`, `taskCreate`, `taskUpdate`, `taskDelete`
 - In-memory task store with `addTask`, `listTasks`, `updateTask`, `deleteTask`
+- Full CRUD UI: task list (SSR), create form (Client Component), edit page (Client Component)
 - See `docs/API.md` for the complete procedure reference
 
 ## Design Decisions

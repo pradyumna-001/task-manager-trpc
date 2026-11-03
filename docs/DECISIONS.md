@@ -107,3 +107,14 @@
 - **Defense in depth:** Two layers of validation mean a bug in one layer doesn't silently corrupt data.
 
 **Trade-off:** Some validation logic is duplicated (e.g., title required is checked by both Zod and `addTask`). This is intentional and acceptable for a small application.
+
+## Client-Side Form Validation
+
+**Decision:** Add client-side form validation on create and edit pages to block submission when title is empty, with inline error messages.
+
+**Reasoning:**
+- **Better UX:** Users get immediate feedback without a server round-trip. Empty titles are caught before the request is sent.
+- **Reduced server load:** Invalid requests never reach the server, saving processing.
+- **Consistent experience:** Both create and edit forms enforce the same validation rule (title required).
+
+**Trade-off:** Validation logic exists in both client and server (Zod), which is intentional for defense in depth.

@@ -8,7 +8,9 @@ The task manager is a single-page Next.js v15 application with a typed RPC (tRPC
 graph TD
     subgraph Browser["Browser (Client)"]
         direction TB
-        page[page.tsx<br/>Client Component]
+        page[page.tsx<br/>Server Component (Task List)]
+        createPage[/tasks/new<br/>Client Component]
+        editPage[/tasks/[id]/edit<br/>Client Component]
         trpcClient[tRPC Client<br/>createTRPCReact + QueryClient]
     end
 
@@ -22,6 +24,8 @@ graph TD
     end
 
     page -->|uses| trpcClient
+    createPage -->|uses| trpcClient
+    editPage -->|uses| trpcClient
     trpcClient -->|HTTP POST JSON| route
     route --> router
     router --> procedures
@@ -66,14 +70,18 @@ flowchart LR
 ### Server Component Boundary
 
 - `app/layout.tsx` wraps all pages with `TrpcProvider` (a Client Component)
-- `app/page.tsx` is a Client Component (`'use client'`) because it uses React Query hooks (`useQuery`)
+- `app/page.tsx` is a Server Component that renders the task list server-side
+- `app/tasks/new/page.tsx` is a Client Component (`'use client'`) for creating tasks
+- `app/tasks/[id]/edit/page.tsx` is a Client Component (`'use client'`) for editing tasks
 - tRPC procedures run on the server; the client never accesses `lib/tasks.ts` directly
 
 ## Component Boundaries
 
 | Layer | Responsibility | Can access store? | Can access browser APIs? |
 |-------|---------------|-------------------|--------------------------|
-| `app/page.tsx` | UI rendering, user interaction | No (via tRPC only) | Yes |
+| `app/page.tsx` | SSR task list rendering | No (via tRPC only) | No (Server Component) |
+| `app/tasks/new/page.tsx` | Create task form | No (via tRPC only) | Yes |
+| `app/tasks/[id]/edit/page.tsx` | Edit task form | No (via tRPC only) | Yes |
 | `app/_trpc/client.ts` | tRPC client configuration | No | Yes |
 | `app/_trpc/provider.tsx` | React Query + tRPC context | No | Yes |
 | `app/api/trpc/[trpc]/route.ts` | HTTP request adapter | No | No (server only) |
