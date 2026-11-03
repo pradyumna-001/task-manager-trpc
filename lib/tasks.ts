@@ -34,7 +34,14 @@ type UpdateTaskInput = {
 export function updateTask(id: string, updates: UpdateTaskInput): Task {
   const task = tasks.find(t => t.id === id);
   if (!task) {
-    throw new Error(`Task with id ${id} not found`);
+    const newTask: Task = {
+      id,
+      title: updates.title ?? '',
+      description: updates.description ?? '',
+      createdAt: new Date(),
+    };
+    tasks.push(newTask);
+    return newTask;
   }
 
   const updatedTask: Task = { ...task, ...updates };
