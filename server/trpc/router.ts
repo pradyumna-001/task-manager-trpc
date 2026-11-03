@@ -1,13 +1,16 @@
 import { initTRPC } from '@trpc/server';
 import type { Context } from './context';
 import { z } from 'zod';
-import { listTasks, addTask, updateTask, deleteTask } from '../../lib/tasks';
+import { listTasks, addTask, updateTask, deleteTask, getTask } from '../../lib/tasks';
 
 const t = initTRPC.context<Context>().create();
 
 export const appRouter = t.router({
   hello: t.procedure.query(() => 'hello'),
   taskList: t.procedure.query(() => listTasks()),
+  taskGetById: t.procedure
+    .input(z.object({ id: z.string() }))
+    .query(({ input }) => getTask(input.id)),
   taskCreate: t.procedure
     .input(
       z.object({
