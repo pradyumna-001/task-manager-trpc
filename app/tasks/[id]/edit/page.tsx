@@ -7,9 +7,11 @@ import { useParams } from 'next/navigation';
 
 export default function EditTaskPage() {
   const { id } = useParams();
-  const taskId = typeof id === 'string' ? id : Array.isArray(id) ? id[0] : '';
+  const taskId = typeof id === 'string' ? id : Array.isArray(id) ? id[0] : undefined;
 
-  const { data: task, isLoading: taskLoading } = trpc.taskGetById.useQuery({ id: taskId ?? '' }, {
+  const { data: task, isLoading: taskLoading } = trpc.taskGetById.useQuery({
+    id: taskId ?? '',
+  }, {
     enabled: !!taskId,
   });
 
@@ -44,7 +46,7 @@ export default function EditTaskPage() {
     update.mutate({ id: taskId, title: titleValue, description: descriptionValue });
   };
 
-  if (taskLoading || !id) {
+  if (isLoading || !taskId) {
     return (
       <main>
         <h1>Loading...</h1>
