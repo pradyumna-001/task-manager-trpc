@@ -94,11 +94,32 @@ async function main() {
     console.log('Nonexistent id throws:', (e as Error).message);
   }
 
-  // Test: taskList reflects all changes
-  const finalList = await caller.taskList();
-  console.assert(finalList.length === 5, `taskList should return 5 items, got ${finalList.length}`);
+  // --- taskDelete tests ---
 
-  console.log('All taskUpdate tests passed.');
+  // Test: delete task by id
+  await new Promise(resolve => setTimeout(resolve, 5));
+  const deleted = await caller.taskDelete({ id: updatedBoth.id });
+  console.assert(deleted === true, 'deleteTask should return true');
+  const afterDelete = await caller.taskList();
+  console.assert(afterDelete.length === 4, `taskList should return 4 items after delete, got ${afterDelete.length}`);
+  console.assert(
+    afterDelete.find(t => t.id === updatedBoth.id) === undefined,
+    'deleted task should not be in taskList'
+  );
+
+  // Test: taskDelete throws for nonexistent id
+  try {
+    await caller.taskDelete({ id: 'nonexistent-id' });
+    console.assert(false, 'should have thrown for nonexistent id');
+  } catch (e) {
+    console.log('Nonexistent id throws:', (e as Error).message);
+  }
+
+  // --- taskList reflects all changes ---
+  const finalList = await caller.taskList();
+  console.assert(finalList.length === 4, `taskList should return 4 items, got ${finalList.length}`);
+
+  console.log('All tests passed.');
 }
 
 main().catch(console.error);
