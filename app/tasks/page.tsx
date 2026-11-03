@@ -1,5 +1,6 @@
 import React from 'react';
 import { appRouter } from '@/server/trpc/router';
+import TaskRow from './TaskRow';
 
 export default async function TaskListPage() {
   const caller = appRouter.createCaller({});
@@ -10,11 +11,7 @@ export default async function TaskListPage() {
       <h1>Task List</h1>
       <ul>
         {tasks.map((task) => (
-          <li key={task.id}>
-            <h2>{task.title}</h2>
-            {task.description && <p>{task.description}</p>}
-            <time>{task.createdAt.toLocaleDateString()}</time>
-          </li>
+          <TaskRow key={task.id} task={task} />
         ))}
       </ul>
     </main>
