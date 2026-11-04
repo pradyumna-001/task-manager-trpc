@@ -3,18 +3,35 @@
 import { useState } from 'react';
 import { trpc } from '@/app/_trpc/client';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 
 export default function EditTaskPage() {
-  const searchParams = useSearchParams();
-  const id = searchParams.get('id') ?? '';
-  const titleParam = searchParams.get('title') ?? '';
-  const descriptionParam = searchParams.get('description') ?? '';
+  const params = useParams();
+  const id = params.id as string;
 
-  const [titleValue, setTitle] = useState(titleParam);
-  const [descriptionValue, setDescription] = useState(descriptionParam);
+  const [titleValue, setTitle] = useState('');
+  const [descriptionValue, setDescription] = useState('');
   const [titleError, setTitleError] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const taskQuery = trpc.taskGetById.useQuery({ id: id ?? '' }, {
+    enabled: !!id,
+    retry: false,
+  });
+
+  if (taskQuery.isLoading) {
+    setIsLoading(true);
+  } else if (taskQuery.isError || !taskQuery.data) {
+    setIsLoading(false);
+  } else {
+    const task = taskQuery.data;
+    if (isLoading) {
+      setTitle(task.title);
+      setDescription(task.description ?? '');
+      setIsLoading(false);
+    }
+  }
 
   const update = trpc.taskUpdate.useMutation({
     onSuccess: () => {
@@ -49,6 +66,28 @@ export default function EditTaskPage() {
         <div className="card" style={{ maxWidth: '500px', textAlign: 'center' }}>
           <h1 className="page-title">Task not found</h1>
           <p>Task with id {id} not found.</p>
+          <Link href="/" className="btn btn-primary" style={{ marginTop: '16px', display: 'inline-block' }}>
+            Back to task list
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container">
+        <p className="loading-text">Loading task...</p>
+      </div>
+    );
+  }
+
+  if (taskQuery.isError || !taskQuery.data) {
+    return (
+      <div className="container">
+        <div className="card" style={{ maxWidth: '500px', textAlign: 'center' }}>
+          <h1 className="page-title">Task not found</h1>
+          <p>Could not load task with id {id}.</p>
           <Link href="/" className="btn btn-primary" style={{ marginTop: '16px', display: 'inline-block' }}>
             Back to task list
           </Link>
