@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { trpc } from '@/app/_trpc/client';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -13,25 +13,11 @@ export default function EditTaskPage() {
   const [descriptionValue, setDescription] = useState('');
   const [titleError, setTitleError] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   const taskQuery = trpc.taskGetById.useQuery({ id: id ?? '' }, {
     enabled: !!id,
     retry: false,
   });
-
-  if (taskQuery.isLoading) {
-    setIsLoading(true);
-  } else if (taskQuery.isError || !taskQuery.data) {
-    setIsLoading(false);
-  } else {
-    const task = taskQuery.data;
-    if (isLoading) {
-      setTitle(task.title);
-      setDescription(task.description ?? '');
-      setIsLoading(false);
-    }
-  }
 
   const update = trpc.taskUpdate.useMutation({
     onSuccess: () => {
@@ -44,6 +30,14 @@ export default function EditTaskPage() {
       setMessage({ type: 'error', text: error.message || 'Failed to update task' });
     },
   });
+
+  // Populate form from query data once loaded
+  useEffect(() => {
+    if (taskQuery.data && !taskQuery.isLoading) {
+      setTitle(taskQuery.data.title);
+      setDescription(taskQuery.data.description ?? '');
+    }
+  }, [taskQuery.data, taskQuery.isLoading]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +68,7 @@ export default function EditTaskPage() {
     );
   }
 
-  if (isLoading) {
+  if (taskQuery.isLoading) {
     return (
       <div className="container">
         <p className="loading-text">Loading task...</p>
