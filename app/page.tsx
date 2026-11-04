@@ -12,7 +12,6 @@ type Task = {
   createdAt: string;
 };
 
-// Type assertion for trpc hooks added after createClient()
 const trpcWithHooks = trpc as typeof trpc & {
   useInfiniteQuery: <TData, TError>(
     path: readonly string[],
@@ -82,30 +81,45 @@ export default function HomePage() {
   }, [fetchNextPage, hasNextPage]);
 
   if (isLoading) {
-    return <main><p>Loading tasks...</p></main>;
+    return (
+      <div className="container">
+        <p className="loading-text">Loading tasks...</p>
+      </div>
+    );
   }
 
   if (isError) {
-    return <main><p>Error loading tasks</p></main>;
+    return (
+      <div className="container">
+        <p className="loading-text">Error loading tasks</p>
+      </div>
+    );
   }
 
   return (
-    <main>
-      <h1>Task List</h1>
-      <p>
-        <a href="/tasks/new" style={{ textDecoration: 'none' }}>
-          <button>Create Task</button>
-        </a>
-      </p>
-      <ul>
-        {tasks.map((task: Task) => (
-          <TaskRow key={task.id} task={{ ...task, createdAt: new Date(task.createdAt) }} />
-        ))}
-      </ul>
-      <div ref={loadMoreRef} style={{ height: '20px' }}>
-        {hasNextPage && isFetchingNextPage && <p>Loading more tasks...</p>}
-        {!hasNextPage && tasks.length > 0 && <p>No more tasks</p>}
-      </div>
-    </main>
+    <div className="container">
+      <header className="page-header">
+        <h1 className="page-title">Task List</h1>
+        <Link href="/tasks/new" className="btn btn-primary">
+          Create Task
+        </Link>
+      </header>
+
+      {tasks.length === 0 ? (
+        <p className="empty-state">No tasks yet. Create your first task!</p>
+      ) : (
+        <>
+          <div>
+            {tasks.map((task) => (
+              <TaskRow key={task.id} task={{ ...task, createdAt: new Date(task.createdAt) }} />
+            ))}
+          </div>
+          <div ref={loadMoreRef} style={{ height: '20px' }}>
+            {hasNextPage && isFetchingNextPage && <p className="loading-text">Loading more tasks...</p>}
+            {!hasNextPage && tasks.length > 0 && <p className="empty-state">No more tasks</p>}
+          </div>
+        </>
+      )}
+    </div>
   );
 }
