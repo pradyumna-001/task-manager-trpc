@@ -28,48 +28,50 @@ export default function CreateTaskPage() {
   };
 
   return (
-    <main>
-      <h1>Create Task</h1>
-      {message && (
-        <div
-          style={{
-            padding: '12px',
-            marginBottom: '16px',
-            borderRadius: '4px',
-            backgroundColor: message.type === 'success' ? '#d4edda' : '#f8d7da',
-            color: message.type === 'success' ? '#155724' : '#721c24',
-            border: `1px solid ${message.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
-          }}
-        >
-          {message.text}
-        </div>
-      )}
-      <form onSubmit={handleSubmit}>
-        <label>
-          Title
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            disabled={create.isPending}
-          />
-        </label>
-        <label>
-          Description
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            disabled={create.isPending}
-          />
-        </label>
-        <button type="submit" disabled={create.isPending}>
-          {create.isPending ? 'Creating...' : 'Create Task'}
-        </button>
-      </form>
-      <p>
-        <Link href="/">Back to task list</Link>
-      </p>
-    </main>
+    <div className="container">
+      <header className="page-header">
+        <h1 className="page-title">Create Task</h1>
+      </header>
+
+      <div className="card" style={{ maxWidth: '500px' }}>
+        {message && (
+          <div className={`toast ${message.type === 'success' ? 'toast-success' : 'toast-error'}`} style={{ marginBottom: '16px' }}>
+            {message.text}
+          </div>
+        )}
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="title">Title</label>
+            <input
+              id="title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              disabled={create.isPending}
+              placeholder="Enter task title"
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="description">Description</label>
+            <textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              disabled={create.isPending}
+              placeholder="Optional description"
+            />
+          </div>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+            <button type="submit" disabled={create.isPending} className="btn btn-primary">
+              {create.isPending ? 'Creating...' : 'Create Task'}
+            </button>
+            <Link href="/" className="btn btn-secondary" style={{ textDecoration: 'none', textAlign: 'center' }}>
+              Cancel
+            </Link>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
